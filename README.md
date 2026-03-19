@@ -101,29 +101,79 @@ Both methods return an `IngestResult` object with the following fields:
 ## Search
 
 ### search_name
-`search_name(index, name, **overrides)`
+`search_name(index, name, *, filters=None, **overrides)`
 
 Search for a specific name with fuzzy matching and highlighting.
 
 ```python
-results = ae.search_name("businesses", "apple", size=5, fuzziness="1")
+# Basic search (no filters)
+results = ae.search_name("businesses", "apple")
+
+# Search with filters
+results = ae.search_name("businesses", "apple", filters={"city": "Cupertino", "country": "US"})
+
+for hit in results:
+    print(f"Found: {hit['_source']['name']} — matched: {hit['matched_fields']}")
+
 # Result shape:
 # {
 #     "_id": str,
 #     "_score": float,
 #     "_source": dict,
-#     "highlight": dict | None
+#     "highlight": dict | None,
+#     "matched_fields": list[str]
 # }
 ```
 
 ### search_names_bulk
-`search_names_bulk(index, names)`
+`search_names_bulk(index, names, *, filters=None)`
 
 Perform multiple name searches in a single bulk request.
 
 ```python
-results = ae.search_names_bulk("businesses", ["apple", "google"])
-# Returns: dict[str, list[dict]] (name -> list of hits)
+# Bulk search with filters
+results = ae.search_names_bulk("businesses", ["apple", "google"], filters={"country": "US"})
+
+# Returns: dict[str, list[dict]] where each dict has matched_fields
+for name, hits in results.items():
+    for hit in hits:
+        print(f"{name}: {hit['_source']['name']} — matched: {hit['matched_fields']}")
+```
+
+### Filters
+
+Both `search_name` and `search_names_bulk` accept an optional `filters` parameter — a `dict[str, str]` mapping field names to values. Filters narrow results without affecting relevance scoring.
+
+**Valid filter fields**: `address`, `city`, `postal`, `region`, `country`
+
+**Matching semantics**:
+- `city`, `region`, `country`: case-insensitive exact match (e.g., `"cupertino"` matches `"Cupertino"`)
+- `postal`: case-insensitive exact match on the postal code
+- `address`: phrase match — the value must appear as a contiguous phrase in the address field
+
+Multiple filters are AND-combined — all must match for a document to be included.
+
+```python
+# Filter by city and country
+results = ae.search_name("businesses", "apple", filters={
+    "city": "Cupertino",
+    "country": "US",
+})
+```
+
+### matched_fields
+
+Every result dict from both search methods includes a `matched_fields: list[str]` — a sorted list of fields that had exact matches:
+
+- `"name"` is included when the searched name exactly matches (case-insensitive) one of the document's name aliases
+- Filter field names (e.g., `"city"`, `"country"`) are included when the filter was provided and the document matched
+
+```python
+results = ae.search_name("businesses", "Apple", filters={"city": "Cupertino"})
+# results[0]["matched_fields"] → ["city", "name"]
+
+results = ae.search_name("businesses", "appel")  # typo — fuzzy match
+# results[0]["matched_fields"] → []  (no filters, name not exact)
 ```
 
 ## Scanning
