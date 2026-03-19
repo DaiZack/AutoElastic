@@ -116,11 +116,11 @@ class AutoElastic:
         engine = IngestEngine(self._client, cfg)
         return engine.ingest(index, _actions(), mapping=mapping)
 
-    def search_name(self, index: str, name: str, **overrides: Any) -> list[dict]:
+    def search_name(self, index: str, name: str, *, filters: dict[str, str] | None = None, **overrides: Any) -> list[dict]:
         from autoelastic.search.query import NameSearch
 
         searcher = NameSearch(self._client, self._config.name_search)
-        return searcher.search(index, name, **overrides)
+        return searcher.search(index, name, filters=filters, **overrides)
 
     def search_names_bulk(self, index: str, names: list[str]) -> dict[str, list[dict]]:
         from autoelastic.search.query import NameSearch

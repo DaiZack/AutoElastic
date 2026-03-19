@@ -2,6 +2,10 @@ from elasticsearch import Elasticsearch
 
 from autoelastic.config import NameSearchConfig
 
+VALID_FILTER_FIELDS = {"address", "city", "postal", "region", "country"}
+KEYWORD_ONLY_FIELDS = {"postal"}
+PHRASE_MATCH_FIELDS = {"address"}
+
 
 class NameSearch:
     """Business name search with fuzzy, prefix, and exact-match boosting."""
@@ -32,12 +36,45 @@ class NameSearch:
             }
         }
 
-    def search(self, index: str, name: str, **overrides) -> list[dict]:
+    def _build_filter_clauses(self, filters: dict[str, str]) -> list[dict]:
+        """Build ES bool.filter clauses from a filters dict."""
+        if not filters:
+            return []
+        clauses = []
+        for key, val in filters.items():
+            if key not in VALID_FILTER_FIELDS:
+                raise ValueError(f"Invalid filter field: {key!r}. Valid fields: {sorted(VALID_FILTER_FIELDS)}")
+            if val == "":
+                raise ValueError(f"Empty value for filter field: {key!r}")
+            if key in PHRASE_MATCH_FIELDS:
+                clauses.append({"match_phrase": {key: val}})
+            elif key in KEYWORD_ONLY_FIELDS:
+                clauses.append({"term": {key: {"value": val, "case_insensitive": True}}})
+            else:
+                clauses.append({"term": {f"{key}.keyword": {"value": val, "case_insensitive": True}}})
+        return clauses
+
+    def _compute_matched_fields(self, hit: dict, name: str, filters: dict[str, str] | None) -> list[str]:
+        """Compute which fields had exact matches for a given hit."""
+        if not filters:
+            return []
+        matched = []
+        source = hit["_source"]
+        if any(n.lower() == name.lower() for n in source.get("name", [])):
+            matched.append("name")
+        for field in filters:
+            matched.append(field)
+        return sorted(matched)
+
+    def search(self, index: str, name: str, *, filters: dict[str, str] | None = None, **overrides) -> list[dict]:
         """Search for businesses by name using fuzzy, prefix, and boosted exact matching."""
         fuzziness = overrides.pop("fuzziness", self.config.fuzziness)
         size = overrides.pop("size", self.config.size)
 
         query = self._build_query_body(name, fuzziness)
+
+        if filters:
+            query["bool"]["filter"] = self._build_filter_clauses(filters)
 
         body: dict = {"query": query, "size": size}
         body.update(overrides)
@@ -56,6 +93,7 @@ class NameSearch:
                 "_score": hit["_score"],
                 "_source": hit["_source"],
                 "highlight": hit.get("highlight"),
+                "matched_fields": self._compute_matched_fields(hit, name, filters),
             }
             for hit in resp["hits"]["hits"]
         ]
