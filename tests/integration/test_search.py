@@ -100,3 +100,72 @@ class TestNameSearchBulk:
         assert len(results["Amazon"]) > 0
         top = results["Amazon"][0]
         assert any("Amazon" in n for n in top["_source"]["name"])
+
+
+@pytest.mark.integration
+class TestNameSearchFilters:
+    def test_filter_by_country_us(self, ae_client, seeded_index):
+        results = ae_client.search_name(seeded_index, "Apple", filters={"country": "US"})
+        assert len(results) > 0
+        assert all(r["_source"]["country"] == "US" for r in results)
+
+    def test_filter_by_country_jp_excludes_us(self, ae_client, seeded_index):
+        results = ae_client.search_name(seeded_index, "Toyota", filters={"country": "JP"})
+        assert len(results) > 0
+        assert all(r["_source"]["country"] == "JP" for r in results)
+
+    def test_filter_by_city_narrows_results(self, ae_client, seeded_index):
+        results = ae_client.search_name(seeded_index, "Apple", filters={"city": "Cupertino"})
+        assert all(r["_source"]["city"] == "Cupertino" for r in results)
+
+    def test_multi_filter_and_semantics(self, ae_client, seeded_index):
+        results = ae_client.search_name(
+            seeded_index, "Apple", filters={"city": "Cupertino", "region": "California"}
+        )
+        assert len(results) > 0
+        assert all(
+            r["_source"]["city"] == "Cupertino" and r["_source"]["region"] == "California"
+            for r in results
+        )
+
+    def test_filter_no_match_returns_empty(self, ae_client, seeded_index):
+        results = ae_client.search_name(seeded_index, "Apple", filters={"country": "JP"})
+        assert len(results) == 0
+
+    def test_matched_fields_populated(self, ae_client, seeded_index):
+        results = ae_client.search_name(seeded_index, "Apple", filters={"city": "Cupertino"})
+        assert len(results) > 0
+        assert "matched_fields" in results[0]
+        assert "name" in results[0]["matched_fields"]
+        assert "city" in results[0]["matched_fields"]
+
+
+@pytest.mark.integration
+class TestNameSearchBulkFilters:
+    def test_bulk_filter_by_country(self, ae_client, seeded_index):
+        results = ae_client.search_names_bulk(
+            seeded_index, ["Apple", "Toyota"], filters={"country": "US"}
+        )
+        assert results["Apple"]
+
+    def test_bulk_filter_narrows_all_names(self, ae_client, seeded_index):
+        results = ae_client.search_names_bulk(
+            seeded_index, ["Apple", "Google"], filters={"region": "California"}
+        )
+        assert results["Apple"]
+        assert results["Google"]
+
+    def test_bulk_matched_fields_populated(self, ae_client, seeded_index):
+        results = ae_client.search_names_bulk(
+            seeded_index, ["Apple"], filters={"city": "Cupertino"}
+        )
+        assert "Apple" in results
+        assert results["Apple"]
+        assert "matched_fields" in results["Apple"][0]
+        assert "city" in results["Apple"][0]["matched_fields"]
+
+    def test_bulk_filter_no_match_returns_empty(self, ae_client, seeded_index):
+        results = ae_client.search_names_bulk(
+            seeded_index, ["Apple"], filters={"country": "JP"}
+        )
+        assert results["Apple"] == []

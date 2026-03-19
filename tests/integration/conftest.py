@@ -120,6 +120,22 @@ SAMPLE_BUSINESSES = [
         "region": "Missouri",
         "country": "US",
     },
+    {
+        "name": ["Toyota", "Toyota Motor Corporation"],
+        "address": "1 Toyota-cho",
+        "city": "Toyota",
+        "postal": "471-8571",
+        "region": "Aichi",
+        "country": "JP",
+    },
+    {
+        "name": ["Shopify", "Shopify Inc"],
+        "address": "151 O'Connor St",
+        "city": "Ottawa",
+        "postal": "K2P 2L8",
+        "region": "Ontario",
+        "country": "CA",
+    },
 ]
 
 # ---------------------------------------------------------------------------
