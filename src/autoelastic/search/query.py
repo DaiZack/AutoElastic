@@ -10,12 +10,9 @@ class NameSearch:
         self.client = client
         self.config = config
 
-    def search(self, index: str, name: str, **overrides) -> list[dict]:
-        """Search for businesses by name using fuzzy, prefix, and boosted exact matching."""
-        fuzziness = overrides.pop("fuzziness", self.config.fuzziness)
-        size = overrides.pop("size", self.config.size)
-
-        query = {
+    def _build_query_body(self, name: str, fuzziness: str) -> dict:
+        """Build the query dict with fuzzy, prefix, and boosted exact matching."""
+        return {
             "bool": {
                 "should": [
                     {
@@ -34,6 +31,13 @@ class NameSearch:
                 "minimum_should_match": 1,
             }
         }
+
+    def search(self, index: str, name: str, **overrides) -> list[dict]:
+        """Search for businesses by name using fuzzy, prefix, and boosted exact matching."""
+        fuzziness = overrides.pop("fuzziness", self.config.fuzziness)
+        size = overrides.pop("size", self.config.size)
+
+        query = self._build_query_body(name, fuzziness)
 
         body: dict = {"query": query, "size": size}
         body.update(overrides)
@@ -63,25 +67,7 @@ class NameSearch:
             fuzziness = self.config.fuzziness
             size = self.config.size
 
-            query = {
-                "bool": {
-                    "should": [
-                        {
-                            "match": {
-                                "name": {
-                                    "query": name,
-                                    "fuzziness": fuzziness,
-                                    "prefix_length": self.config.prefix_length,
-                                }
-                            }
-                        },
-                        {"match": {"name.edge_ngram": {"query": name, "boost": 0.5}}},
-                        {"match_phrase_prefix": {"name": {"query": name}}},
-                        {"match": {"name.keyword": {"query": name, "boost": 2.0}}},
-                    ],
-                    "minimum_should_match": 1,
-                }
-            }
+            query = self._build_query_body(name, fuzziness)
 
             body: dict = {"query": query, "size": size}
 
