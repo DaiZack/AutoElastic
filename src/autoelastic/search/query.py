@@ -98,14 +98,19 @@ class NameSearch:
             for hit in resp["hits"]["hits"]
         ]
 
-    def search_bulk(self, index: str, names: list[str]) -> dict[str, list[dict]]:
+    def search_bulk(self, index: str, names: list[str], *, filters: dict[str, str] | None = None) -> dict[str, list[dict]]:
         """Search multiple names at once via _msearch, returning a mapping of name → results."""
+        filter_clauses = self._build_filter_clauses(filters) if filters else []
+
         request_body: list = []
         for name in names:
             fuzziness = self.config.fuzziness
             size = self.config.size
 
             query = self._build_query_body(name, fuzziness)
+
+            if filter_clauses:
+                query["bool"]["filter"] = filter_clauses
 
             body: dict = {"query": query, "size": size}
 
@@ -127,6 +132,7 @@ class NameSearch:
                     "_score": hit["_score"],
                     "_source": hit["_source"],
                     "highlight": hit.get("highlight"),
+                    "matched_fields": self._compute_matched_fields(hit, name, filters),
                 }
                 for hit in r["hits"]["hits"]
             ]

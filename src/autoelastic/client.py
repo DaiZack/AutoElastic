@@ -122,11 +122,11 @@ class AutoElastic:
         searcher = NameSearch(self._client, self._config.name_search)
         return searcher.search(index, name, filters=filters, **overrides)
 
-    def search_names_bulk(self, index: str, names: list[str]) -> dict[str, list[dict]]:
+    def search_names_bulk(self, index: str, names: list[str], *, filters: dict[str, str] | None = None) -> dict[str, list[dict]]:
         from autoelastic.search.query import NameSearch
 
         searcher = NameSearch(self._client, self._config.name_search)
-        return searcher.search_bulk(index, names)
+        return searcher.search_bulk(index, names, filters=filters)
 
     def scan(self, index: str, query: dict | None = None, **kwargs: Any):
         from autoelastic.search.bulk import BulkSearch
