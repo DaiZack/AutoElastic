@@ -30,15 +30,15 @@ class TestIngestDicts:
             ingest_config=fast_ingest_config,
         )
 
-        assert result.succeeded == 10
+        assert result.succeeded == 12
         assert result.failed == 0
-        assert result.total == 10
+        assert result.total == 12
         assert result.elapsed_seconds > 0
 
     def test_ingest_docs_are_searchable(self, ae_client, seeded_index):
         """Documents ingested via ingest_dicts() are searchable by count."""
         count = ae_client.client.count(index=seeded_index)["count"]
-        assert count == 10
+        assert count == 12
 
     def test_ingest_mapping_applied_correctly(self, ae_client, seeded_index):
         """ingest_dicts() applies the business-entity mapping to the index."""
@@ -160,7 +160,7 @@ class TestIngestParquet:
             ingest_config=fast_ingest_config,
         )
 
-        assert result.succeeded == 10
+        assert result.succeeded == 12
         assert result.failed == 0
 
     def test_ingest_parquet_with_column_filter(
@@ -206,4 +206,4 @@ class TestIngestParquet:
         schema = ae_client.parquet_schema(sample_parquet)
         assert set(schema.keys()) == {"name", "address", "city", "postal", "region", "country"}
 
-        assert ae_client.parquet_row_count(sample_parquet) == 10
+        assert ae_client.parquet_row_count(sample_parquet) == 12

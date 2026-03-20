@@ -38,4 +38,4 @@ class TestParquetUtilities:
     def test_parquet_row_count(self, ae_client, sample_parquet):
         """Test that parquet_row_count returns correct count."""
         count = ae_client.parquet_row_count(sample_parquet)
-        assert count == 10
+        assert count == 12

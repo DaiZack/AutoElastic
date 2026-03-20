@@ -12,7 +12,7 @@ class TestScan:
     def test_scan_returns_all_docs(self, ae_client, seeded_index):
         """Test that scan() returns all documents from the index."""
         docs = list(ae_client.scan(seeded_index))
-        assert len(docs) == 10
+        assert len(docs) == 12
 
     def test_scan_returns_source_dicts(self, ae_client, seeded_index):
         """Test that scan() yields _source dicts with no metadata (_id, _score)."""
@@ -48,4 +48,4 @@ class TestScan:
         config = SearchConfig(page_size=3)
         searcher = BulkSearch(ae_client.client, config)
         docs = list(searcher.scan(seeded_index))
-        assert len(docs) == 10
+        assert len(docs) == 12
