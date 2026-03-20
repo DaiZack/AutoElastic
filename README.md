@@ -2,6 +2,8 @@
 
 Bulk-load any data into Elasticsearch and search at scale.
 
+#### Note: This project was developed entirely by AI agents; no code was written by a human. While I have performed basic viability testing, this serves primarily as an exploration of "vibe coding" capabilities. I claim no ownership of the generated code and assume no responsibility for its content or performance. Please use with caution.
+
 ## Installation
 
 ```bash
