@@ -1,4 +1,4 @@
-# autoelastic
+# AutoElastic
 
 Bulk-load any data into Elasticsearch and search at scale.
 
