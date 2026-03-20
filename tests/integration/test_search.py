@@ -30,8 +30,7 @@ class TestNameSearch:
         results = ae_client.search_name(seeded_index, "App")
         assert len(results) > 0
         assert any(
-            any("Apple" in n or "Applebee" in n for n in r["_source"]["name"])
-            for r in results
+            any("Apple" in n or "Applebee" in n for n in r["_source"]["name"]) for r in results
         )
 
     def test_case_insensitive(self, ae_client, seeded_index):
@@ -84,9 +83,7 @@ class TestNameSearchBulk:
         assert len(results["Tesla"]) > 0
 
     def test_bulk_search_mixed_hits_and_misses(self, ae_client, seeded_index):
-        results = ae_client.search_names_bulk(
-            seeded_index, ["Microsoft", "zzxxyy_nonexistent"]
-        )
+        results = ae_client.search_names_bulk(seeded_index, ["Microsoft", "zzxxyy_nonexistent"])
         assert len(results["Microsoft"]) > 0
         assert len(results["zzxxyy_nonexistent"]) == 0
 
@@ -165,7 +162,5 @@ class TestNameSearchBulkFilters:
         assert "city" in results["Apple"][0]["matched_fields"]
 
     def test_bulk_filter_no_match_returns_empty(self, ae_client, seeded_index):
-        results = ae_client.search_names_bulk(
-            seeded_index, ["Apple"], filters={"country": "JP"}
-        )
+        results = ae_client.search_names_bulk(seeded_index, ["Apple"], filters={"country": "JP"})
         assert results["Apple"] == []

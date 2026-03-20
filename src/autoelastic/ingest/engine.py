@@ -19,7 +19,7 @@ class IngestResult:
     total: int
     succeeded: int
     failed: int
-    errors: list[dict] = field(default_factory=list)
+    errors: list[dict[str, Any]] = field(default_factory=list)
     elapsed_seconds: float = 0.0
 
 
@@ -41,7 +41,7 @@ class IngestEngine:
         actions: Iterator[dict[str, Any]],
         *,
         create_index: bool = True,
-        mapping: dict | None = None,
+        mapping: dict[str, Any] | None = None,
     ) -> IngestResult:
         """Bulk-index *actions* into *index* and return an IngestResult.
 
@@ -95,7 +95,7 @@ class IngestEngine:
 
         succeeded = 0
         failed = 0
-        errors: list[dict] = []
+        errors: list[dict[str, Any]] = []
 
         logger.info("Starting bulk ingest into index %r", index)
         start = time.perf_counter()
@@ -136,9 +136,7 @@ class IngestEngine:
                     else cfg.refresh_interval_after
                 )
                 restore_replicas = (
-                    original_replicas
-                    if original_replicas is not None
-                    else cfg.replicas_after
+                    original_replicas if original_replicas is not None else cfg.replicas_after
                 )
                 client.indices.put_settings(
                     index=index,
@@ -157,9 +155,7 @@ class IngestEngine:
                 )
 
             if cfg.force_merge_after:
-                logger.info(
-                    "Force-merging index %r to %d segment(s)", index, cfg.max_num_segments
-                )
+                logger.info("Force-merging index %r to %d segment(s)", index, cfg.max_num_segments)
                 client.indices.forcemerge(index=index, max_num_segments=cfg.max_num_segments)
 
             client.indices.refresh(index=index)

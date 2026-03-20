@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-import pyarrow.parquet as pq
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 
 def stream_parquet(
@@ -31,7 +31,7 @@ def stream_parquet(
 
 def count_rows(path: str | Path) -> int:
     """Return the total row count of a Parquet file without reading its data."""
-    return pq.ParquetFile(path).metadata.num_rows
+    return int(pq.ParquetFile(path).metadata.num_rows)
 
 
 def detect_schema(path: str | Path) -> dict[str, str]:

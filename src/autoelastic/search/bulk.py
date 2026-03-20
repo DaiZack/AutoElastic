@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Iterator
+from typing import Any
 
 from elasticsearch import Elasticsearch
 
@@ -20,9 +21,9 @@ class BulkSearch:
     def scan(
         self,
         index: str,
-        query: dict | None = None,
-        sort: list | None = None,
-    ) -> Iterator[dict]:
+        query: dict[str, Any] | None = None,
+        sort: list[Any] | None = None,
+    ) -> Iterator[dict[str, Any]]:
         """Paginate through all hits using a PIT and search_after, yielding each hit's _source."""
         if query is None:
             query = {"match_all": {}}
@@ -39,7 +40,7 @@ class BulkSearch:
             page = 0
 
             while True:
-                body: dict = {
+                body: dict[str, Any] = {
                     "query": query,
                     "sort": sort,
                     "size": self.config.page_size,
@@ -76,14 +77,14 @@ class BulkSearch:
             except Exception:
                 logger.warning("Failed to close PIT %s", pit_id, exc_info=True)
 
-    def msearch(self, index: str, queries: list[dict]) -> list[dict]:
+    def msearch(self, index: str, queries: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Batch multiple query bodies into _msearch calls, returning all responses in order."""
-        results: list[dict] = []
+        results: list[dict[str, Any]] = []
         batch_size = self.config.max_concurrent
 
         for i in range(0, len(queries), batch_size):
             batch = queries[i : i + batch_size]
-            request_body: list = []
+            request_body: list[Any] = []
             for q in batch:
                 request_body.append({"index": index})
                 request_body.append(q)

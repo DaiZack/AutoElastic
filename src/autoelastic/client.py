@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
 from typing import Any
 
 from elasticsearch import Elasticsearch
@@ -68,7 +69,7 @@ class AutoElastic:
         id_field: str | None = None,
         columns: list[str] | None = None,
         batch_size: int = 10_000,
-        mapping: dict | None = None,
+        mapping: dict[str, Any] | None = None,
         shards: int = 3,
         ingest_config: IngestConfig | None = None,
     ) -> IngestResult:
@@ -97,7 +98,7 @@ class AutoElastic:
         docs: list[dict[str, Any]] | Any,
         *,
         id_field: str | None = None,
-        mapping: dict | None = None,
+        mapping: dict[str, Any] | None = None,
         shards: int = 3,
         ingest_config: IngestConfig | None = None,
     ) -> IngestResult:
@@ -106,7 +107,7 @@ class AutoElastic:
         if mapping is None:
             mapping = build_index_body(shards=shards)
 
-        def _actions():
+        def _actions() -> Iterator[dict[str, Any]]:
             for doc in docs:
                 action: dict[str, Any] = {"_index": index, "_source": doc}
                 if id_field and id_field in doc:
@@ -116,19 +117,25 @@ class AutoElastic:
         engine = IngestEngine(self._client, cfg)
         return engine.ingest(index, _actions(), mapping=mapping)
 
-    def search_name(self, index: str, name: str, *, filters: dict[str, str] | None = None, **overrides: Any) -> list[dict]:
+    def search_name(
+        self, index: str, name: str, *, filters: dict[str, str] | None = None, **overrides: Any
+    ) -> list[dict[str, Any]]:
         from autoelastic.search.query import NameSearch
 
         searcher = NameSearch(self._client, self._config.name_search)
         return searcher.search(index, name, filters=filters, **overrides)
 
-    def search_names_bulk(self, index: str, names: list[str], *, filters: dict[str, str] | None = None) -> dict[str, list[dict]]:
+    def search_names_bulk(
+        self, index: str, names: list[str], *, filters: dict[str, str] | None = None
+    ) -> dict[str, list[dict[str, Any]]]:
         from autoelastic.search.query import NameSearch
 
         searcher = NameSearch(self._client, self._config.name_search)
         return searcher.search_bulk(index, names, filters=filters)
 
-    def scan(self, index: str, query: dict | None = None, **kwargs: Any):
+    def scan(
+        self, index: str, query: dict[str, Any] | None = None, **kwargs: Any
+    ) -> Iterator[dict[str, Any]]:
         from autoelastic.search.bulk import BulkSearch
 
         searcher = BulkSearch(self._client, self._config.search)
@@ -143,8 +150,8 @@ class AutoElastic:
     def close(self) -> None:
         self._client.close()
 
-    def __enter__(self):
+    def __enter__(self) -> AutoElastic:
         return self
 
-    def __exit__(self, *exc):
+    def __exit__(self, *exc: Any) -> None:
         self.close()

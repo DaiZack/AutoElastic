@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 BUSINESS_ENTITY_SETTINGS = {
     "analysis": {
         "analyzer": {
@@ -62,11 +64,11 @@ BUSINESS_ENTITY_MAPPINGS = {
 
 def build_index_body(
     *,
-    settings_overrides: dict | None = None,
-    mapping_overrides: dict | None = None,
+    settings_overrides: dict[str, Any] | None = None,
+    mapping_overrides: dict[str, Any] | None = None,
     shards: int = 3,
     replicas: int = 1,
-) -> dict:
+) -> dict[str, Any]:
     settings = {
         **BUSINESS_ENTITY_SETTINGS,
         "number_of_shards": shards,

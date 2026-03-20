@@ -28,18 +28,14 @@ class TestScan:
 
     def test_scan_with_query_filter(self, ae_client, seeded_index):
         """Test that scan() respects query filters (e.g., term query on city.keyword)."""
-        docs = list(
-            ae_client.scan(seeded_index, query={"term": {"city.keyword": "Cupertino"}})
-        )
+        docs = list(ae_client.scan(seeded_index, query={"term": {"city.keyword": "Cupertino"}}))
         assert len(docs) == 1
         assert any("Apple" in n for n in docs[0]["name"])
 
     def test_scan_empty_result(self, ae_client, seeded_index):
         """Test that scan() returns empty iterator when query matches no docs."""
         docs = list(
-            ae_client.scan(
-                seeded_index, query={"term": {"city.keyword": "Nonexistent City"}}
-            )
+            ae_client.scan(seeded_index, query={"term": {"city.keyword": "Nonexistent City"}})
         )
         assert len(docs) == 0
 

@@ -1,3 +1,5 @@
+from typing import Any
+
 from elasticsearch import Elasticsearch
 
 from autoelastic.config import NameSearchConfig
@@ -14,7 +16,7 @@ class NameSearch:
         self.client = client
         self.config = config
 
-    def _build_query_body(self, name: str, fuzziness: str) -> dict:
+    def _build_query_body(self, name: str, fuzziness: str) -> dict[str, Any]:
         """Build the query dict with fuzzy, prefix, and boosted exact matching."""
         return {
             "bool": {
@@ -36,14 +38,16 @@ class NameSearch:
             }
         }
 
-    def _build_filter_clauses(self, filters: dict[str, str]) -> list[dict]:
+    def _build_filter_clauses(self, filters: dict[str, str]) -> list[dict[str, Any]]:
         """Build ES bool.filter clauses from a filters dict."""
         if not filters:
             return []
-        clauses = []
+        clauses: list[dict[str, Any]] = []
         for key, val in filters.items():
             if key not in VALID_FILTER_FIELDS:
-                raise ValueError(f"Invalid filter field: {key!r}. Valid fields: {sorted(VALID_FILTER_FIELDS)}")
+                raise ValueError(
+                    f"Invalid filter field: {key!r}. Valid fields: {sorted(VALID_FILTER_FIELDS)}"
+                )
             if val == "":
                 raise ValueError(f"Empty value for filter field: {key!r}")
             if key in PHRASE_MATCH_FIELDS:
@@ -51,10 +55,14 @@ class NameSearch:
             elif key in KEYWORD_ONLY_FIELDS:
                 clauses.append({"term": {key: {"value": val, "case_insensitive": True}}})
             else:
-                clauses.append({"term": {f"{key}.keyword": {"value": val, "case_insensitive": True}}})
+                clauses.append(
+                    {"term": {f"{key}.keyword": {"value": val, "case_insensitive": True}}}
+                )
         return clauses
 
-    def _compute_matched_fields(self, hit: dict, name: str, filters: dict[str, str] | None) -> list[str]:
+    def _compute_matched_fields(
+        self, hit: dict[str, Any], name: str, filters: dict[str, str] | None
+    ) -> list[str]:
         """Compute which fields had exact matches for a given hit."""
         if not filters:
             return []
@@ -66,7 +74,9 @@ class NameSearch:
             matched.append(field)
         return sorted(matched)
 
-    def search(self, index: str, name: str, *, filters: dict[str, str] | None = None, **overrides) -> list[dict]:
+    def search(
+        self, index: str, name: str, *, filters: dict[str, str] | None = None, **overrides: Any
+    ) -> list[dict[str, Any]]:
         """Search for businesses by name using fuzzy, prefix, and boosted exact matching."""
         fuzziness = overrides.pop("fuzziness", self.config.fuzziness)
         size = overrides.pop("size", self.config.size)
@@ -76,7 +86,7 @@ class NameSearch:
         if filters:
             query["bool"]["filter"] = self._build_filter_clauses(filters)
 
-        body: dict = {"query": query, "size": size}
+        body: dict[str, Any] = {"query": query, "size": size}
         body.update(overrides)
 
         if self.config.min_score is not None:
@@ -98,11 +108,13 @@ class NameSearch:
             for hit in resp["hits"]["hits"]
         ]
 
-    def search_bulk(self, index: str, names: list[str], *, filters: dict[str, str] | None = None) -> dict[str, list[dict]]:
+    def search_bulk(
+        self, index: str, names: list[str], *, filters: dict[str, str] | None = None
+    ) -> dict[str, list[dict[str, Any]]]:
         """Search multiple names at once via _msearch, returning a mapping of name → results."""
         filter_clauses = self._build_filter_clauses(filters) if filters else []
 
-        request_body: list = []
+        request_body: list[Any] = []
         for name in names:
             fuzziness = self.config.fuzziness
             size = self.config.size
@@ -112,7 +124,7 @@ class NameSearch:
             if filter_clauses:
                 query["bool"]["filter"] = filter_clauses
 
-            body: dict = {"query": query, "size": size}
+            body: dict[str, Any] = {"query": query, "size": size}
 
             if self.config.min_score is not None:
                 body["min_score"] = self.config.min_score

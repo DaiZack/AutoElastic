@@ -71,9 +71,7 @@ class TestStreamParquet:
         path = tmp_path / "test.parquet"
         _write_test_parquet(path)
 
-        action = next(
-            iter(stream_parquet(str(path), "test-index", columns=["name", "city"]))
-        )
+        action = next(iter(stream_parquet(str(path), "test-index", columns=["name", "city"])))
         assert "name" in action["_source"]
         assert "city" in action["_source"]
         assert "address" not in action["_source"]

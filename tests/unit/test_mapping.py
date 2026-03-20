@@ -51,9 +51,7 @@ class TestBuildIndexBody:
         assert body["settings"]["refresh_interval"] == "5s"
 
     def test_mapping_overrides_add_field(self):
-        body = build_index_body(
-            mapping_overrides={"properties": {"phone": {"type": "keyword"}}}
-        )
+        body = build_index_body(mapping_overrides={"properties": {"phone": {"type": "keyword"}}})
         assert "phone" in body["mappings"]["properties"]
         assert body["mappings"]["properties"]["phone"]["type"] == "keyword"
         assert "name" in body["mappings"]["properties"]

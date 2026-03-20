@@ -221,9 +221,9 @@ class TestNameSearchFilters:
 
     def test_matched_fields_present_in_results(self):
         client = MagicMock()
-        client.search.return_value = _make_search_response(hits=[
-            _make_hit(source={"name": ["Apple"]})
-        ])
+        client.search.return_value = _make_search_response(
+            hits=[_make_hit(source={"name": ["Apple"]})]
+        )
         searcher = NameSearch(client, NameSearchConfig())
 
         results = searcher.search("idx", "Apple", filters={"city": "Cupertino"})
@@ -233,9 +233,9 @@ class TestNameSearchFilters:
 
     def test_matched_fields_includes_name_on_exact_match(self):
         client = MagicMock()
-        client.search.return_value = _make_search_response(hits=[
-            _make_hit(source={"name": ["Apple", "Apple Inc"]})
-        ])
+        client.search.return_value = _make_search_response(
+            hits=[_make_hit(source={"name": ["Apple", "Apple Inc"]})]
+        )
         searcher = NameSearch(client, NameSearchConfig())
 
         results = searcher.search("idx", "Apple", filters={"city": "Cupertino"})
@@ -244,9 +244,9 @@ class TestNameSearchFilters:
 
     def test_matched_fields_excludes_name_on_fuzzy_match(self):
         client = MagicMock()
-        client.search.return_value = _make_search_response(hits=[
-            _make_hit(source={"name": ["Apple"]})
-        ])
+        client.search.return_value = _make_search_response(
+            hits=[_make_hit(source={"name": ["Apple"]})]
+        )
         searcher = NameSearch(client, NameSearchConfig())
 
         results = searcher.search("idx", "Appel", filters={"city": "Cupertino"})
@@ -255,9 +255,9 @@ class TestNameSearchFilters:
 
     def test_matched_fields_includes_filter_fields(self):
         client = MagicMock()
-        client.search.return_value = _make_search_response(hits=[
-            _make_hit(source={"name": ["Apple"], "city": "Cupertino"})
-        ])
+        client.search.return_value = _make_search_response(
+            hits=[_make_hit(source={"name": ["Apple"], "city": "Cupertino"})]
+        )
         searcher = NameSearch(client, NameSearchConfig())
 
         results = searcher.search("idx", "Apple", filters={"city": "Cupertino"})
@@ -266,9 +266,9 @@ class TestNameSearchFilters:
 
     def test_matched_fields_empty_when_no_filters(self):
         client = MagicMock()
-        client.search.return_value = _make_search_response(hits=[
-            _make_hit(source={"name": ["Apple"]})
-        ])
+        client.search.return_value = _make_search_response(
+            hits=[_make_hit(source={"name": ["Apple"]})]
+        )
         searcher = NameSearch(client, NameSearchConfig())
 
         results = searcher.search("idx", "Apple")
